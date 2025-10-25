@@ -25,8 +25,10 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> fetchCoordinates() async {
     try {
-      //final response = await http.get(Uri.parse('http://10.0.2.2:5000/coordinates'));
-      final response = await http.get(Uri.parse('http://192.168.43.63:5600/coordinates'));
+      final response = await http.get(Uri.parse('http://10.0.2.2:5000/coordinates'));
+      //final response = await http.get(Uri.parse('http://192.168.43.63:5600/coordinates'));
+      
+
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -74,7 +76,7 @@ class _MapScreenState extends State<MapScreen> {
                       width: 40.0,
                       height: 40.0,
                       alignment: Alignment.center,
-                      child: Icon(Icons.location_pin, size: 40, color: Colors.red),
+                      child: Icon(Icons.location_pin, size: 39, color: Colors.red),
                       rotate: false,
                     ),
                   ],
