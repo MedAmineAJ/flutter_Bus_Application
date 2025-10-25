@@ -1,3 +1,4 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "cmake.sourceDirectory": "C:/Users/ADMIN/OneDrive/Bureau/kidway/flutter_app_22/flutter_app_final/flutter_essai/essai_firebase/essai_firebase/linux"
 }

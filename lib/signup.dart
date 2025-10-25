@@ -36,8 +36,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String lastName = surnameController.text;
     String newFileName = '$firstName $lastName${extension(imageFile.path)}';
 
-    //final uri = Uri.parse('http://10.0.2.2:5000/upload');
-    final uri = Uri.parse('http://192.168.43.63:5600/upload');
+    final uri = Uri.parse('http://10.0.2.2:5000/upload');
+    //final uri = Uri.parse('http://192.168.43.63:5600/upload');
     var request = http.MultipartRequest('POST', uri);
 
     request.files.add(await http.MultipartFile.fromPath(
