@@ -1,7 +1,53 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class MeteoScreen extends StatelessWidget {
+class MeteoScreen extends StatefulWidget {
   const MeteoScreen({super.key});
+
+  @override
+  State<MeteoScreen> createState() => _MeteoScreenState();
+}
+
+class _MeteoScreenState extends State<MeteoScreen> {
+  // 🔹 Variables météo
+  double? temperature;
+  int? humidity;
+  String? description;
+  String? city = "Tunis";
+
+  // 🔹 Ta clé API
+  final String apiKey = "40bcfe64d396a42dccd24061a558c90b";
+
+  // 🔹 Fonction pour récupérer les données météo
+  Future<void> fetchWeather() async {
+    final url =
+        "https://api.openweathermap.org/data/2.5/weather?q=$city,tn&appid=$apiKey&units=metric&lang=fr";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        setState(() {
+          temperature = data["main"]["temp"];
+          humidity = data["main"]["humidity"];
+          description = data["weather"][0]["description"];
+        });
+      } else {
+        print("⚠️ Erreur API : ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Erreur de connexion : $e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWeather(); // Charger les données dès l’ouverture
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +59,9 @@ class MeteoScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Image de fond
           Positioned.fill(
             child: Image.asset(
-              'assets/images/meteo.jpg', // Assurez-vous de mettre le bon chemin de l'image
+              'assets/images/meteo.jpg',
               fit: BoxFit.cover,
             ),
           ),
@@ -35,7 +80,7 @@ class MeteoScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Conteneur avec une décoration soignée
+                // 🔹 Bloc météo dynamique
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -50,60 +95,56 @@ class MeteoScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.2),
                         spreadRadius: 2,
                         blurRadius: 5,
-                        offset: Offset(0, 3), // décalage de l'ombre
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.wb_sunny,
-                            size: 60,
-                            color: Colors.yellow[700],
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Ensoleillé',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                  child: temperature == null
+                      ? const Center(
+                          child: CircularProgressIndicator(color: Colors.white))
+                      : Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.wb_sunny,
+                                    size: 60, color: Colors.yellow),
+                                const SizedBox(width: 10),
+                                Text(
+                                  description!.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      const Text(
-                        'Température: 25°C',
-                        style: TextStyle(fontSize: 22, color: Colors.white),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Humidité: 70%',
-                        style: TextStyle(fontSize: 22, color: Colors.white),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'Conditions: Ensoleillé',
-                        style: TextStyle(fontSize: 22, color: Colors.white),
-                      ),
-                    ],
-                  ),
+                            const SizedBox(height: 15),
+                            Text(
+                              'Température: ${temperature?.toStringAsFixed(1)} °C',
+                              style: const TextStyle(
+                                  fontSize: 22, color: Colors.white),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Humidité: $humidity%',
+                              style: const TextStyle(
+                                  fontSize: 22, color: Colors.white),
+                            ),
+                          ],
+                        ),
                 ),
                 const SizedBox(height: 30),
 
-                // Bouton d'actualisation avec une belle apparence
+                // 🔹 Bouton d’actualisation
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Action à prendre, par exemple pour actualiser la météo
-                    },
+                    onPressed: fetchWeather,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange[700],
-                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 40),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
