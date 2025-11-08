@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -9,10 +10,77 @@ class FeedbackScreen extends StatefulWidget {
 }
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
-  // Variables pour gérer l'état de la sélection des visages et des étoiles
-  int selectedFaceIndex = -1; // -1 signifie aucune sélection
+  int selectedFaceIndex = -1;
   int selectedStars = 0;
   TextEditingController commentController = TextEditingController();
+
+  late DatabaseReference dbRef; // 🔥 Référence dynamique Firebase
+  bool isSending = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 🔹 Connexion explicite à la base avec ton URL
+    final database = FirebaseDatabase.instanceFor(
+      app: FirebaseDatabase.instance.app,
+      databaseURL: "https://finalkidway-default-rtdb.europe-west1.firebasedatabase.app/",
+    );
+
+    // 🔹 Référence au nœud "feedback"
+    dbRef = database.ref('feedback');
+
+    print("✅ Firebase connecté : ${dbRef.path}");
+  }
+
+  /// 🔹 Fonction d’envoi vers Firebase
+  Future<void> sendFeedback() async {
+    if (selectedFaceIndex == -1 || selectedStars == 0 || commentController.text.isEmpty) {
+      Fluttertoast.showToast(
+        msg: "Veuillez remplir tous les champs.",
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return;
+    }
+
+    setState(() => isSending = true);
+
+    try {
+      await dbRef.push().set({
+        "face": selectedFaceIndex == 0
+            ? "fâché"
+            : selectedFaceIndex == 1
+                ? "neutre"
+                : "satisfait",
+        "stars": selectedStars,
+        "comment": commentController.text,
+        "timestamp": DateTime.now().toIso8601String(),
+      });
+
+      Fluttertoast.showToast(
+        msg: "✅ Merci pour votre retour !",
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+      );
+
+      print("📤 Feedback envoyé à Firebase !");
+      commentController.clear();
+      setState(() {
+        selectedFaceIndex = -1;
+        selectedStars = 0;
+      });
+    } catch (e) {
+      print("❌ Erreur Firebase : $e");
+      Fluttertoast.showToast(
+        msg: "Erreur lors de l’envoi.",
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+    } finally {
+      setState(() => isSending = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +101,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Section des icônes de visages (content, fâché, normal) sous forme de boutons
+              // 🔸 Choix de l’humeur
               const Text(
                 'Comment vous sentez-vous ?',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -42,41 +110,26 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Visage fâché
                   IconButton(
                     icon: const Icon(Icons.sentiment_very_dissatisfied, size: 40),
                     color: selectedFaceIndex == 0 ? Colors.red : Colors.grey,
-                    onPressed: () {
-                      setState(() {
-                        selectedFaceIndex = 0;
-                      });
-                    },
+                    onPressed: () => setState(() => selectedFaceIndex = 0),
                   ),
-                  // Visage normal
                   IconButton(
                     icon: const Icon(Icons.sentiment_neutral, size: 40),
-                    color: selectedFaceIndex == 1 ? Colors.grey : Colors.grey,
-                    onPressed: () {
-                      setState(() {
-                        selectedFaceIndex = 1;
-                      });
-                    },
+                    color: selectedFaceIndex == 1 ? Colors.amber : Colors.grey,
+                    onPressed: () => setState(() => selectedFaceIndex = 1),
                   ),
-                  // Visage content
                   IconButton(
                     icon: const Icon(Icons.sentiment_very_satisfied, size: 40),
                     color: selectedFaceIndex == 2 ? Colors.green : Colors.grey,
-                    onPressed: () {
-                      setState(() {
-                        selectedFaceIndex = 2;
-                      });
-                    },
+                    onPressed: () => setState(() => selectedFaceIndex = 2),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // Section des étoiles (notation) sous forme de boutons
+              // 🔸 Évaluation par étoiles
               const Text(
                 'Veuillez évaluer votre expérience',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -91,17 +144,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       size: 40,
                       color: index < selectedStars ? Colors.orange : Colors.grey,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        selectedStars = index + 1;
-                      });
-                    },
+                    onPressed: () => setState(() => selectedStars = index + 1),
                   );
                 }),
               ),
               const SizedBox(height: 20),
 
-              // Champ de texte pour commentaires
+              // 🔸 Champ commentaire
               const Text(
                 'Votre suggestion ou commentaire',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -118,39 +167,23 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Bouton "Soumettre"
+              // 🔸 Bouton d’envoi
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Vérifie si les champs sont remplis
-                    if (selectedFaceIndex == -1 || selectedStars == 0 || commentController.text.isEmpty) {
-                      // Affiche un message Toast si les champs ne sont pas remplis
-                      Fluttertoast.showToast(
-                        msg: "Veuillez remplir tous les champs.",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.red,
-                        textColor: Colors.white,
-                        fontSize: 16.0,
-                      );
-                    } else {
-                      // Logique pour soumettre le feedback
-                      // Navigue vers le Dashboard après soumission
-                      Navigator.pop(context);
-                    }
-                  },
+                  onPressed: isSending ? null : sendFeedback,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                     backgroundColor: Colors.orange[700],
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    'Soumettre',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: isSending
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Soumettre',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
             ],
