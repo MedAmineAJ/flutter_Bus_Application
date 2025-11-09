@@ -1,69 +1,86 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class GamesScreen extends StatelessWidget {
   const GamesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Liste des jeux (style inspiré de LibraryScreen)
+    final List<Map<String, dynamic>> games = [
+      {
+        'name': 'Jeu de Mémoire',
+        'lottie': 'assets/images/Cognition.json',
+        'screen': const MemoryGame(),
+      },
+      {
+        'name': 'Quiz Culture Générale',
+        'lottie': 'assets/images/Quiz button.json',
+        'screen': const QuizGame(),
+      },
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Jeux et Quiz'),
-        backgroundColor: Colors.orange[700],
-      ),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/jeu.jpg"), // Chemin de votre image
+            image: AssetImage('assets/images/jeu.jpg'), // même fond que library
             fit: BoxFit.cover,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              const Text(
-                'Section Jeux et Quiz',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.deepOrange),
-              ),
-              const SizedBox(height: 30),
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: Container(
+          color: Colors.white.withOpacity(0.85), // effet flou clair
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: games.length,
+            itemBuilder: (context, index) {
+              final game = games[index];
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: ListTile(
-                  leading: Icon(Icons.gamepad, size: 40, color: Colors.orange[800]),
-                  title: const Text(
-                    'Jeu de Mémoire',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  contentPadding: const EdgeInsets.all(12),
+                  leading: SizedBox(
+                    height: 70,
+                    width: 70,
+                    child: Lottie.asset(
+                      game['lottie'],
+                      repeat: true,
+                      animate: true,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios),
+                  title: Text(
+                    game['name'],
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFEF6C00),
+                    ),
+                  ),
+                  trailing:
+                      const Icon(Icons.arrow_forward_ios, color: Colors.orange),
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const MemoryGame()),
+                      MaterialPageRoute(builder: (context) => game['screen']),
                     );
                   },
                 ),
-              ),
-              const SizedBox(height: 20),
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: ListTile(
-                  leading: Icon(Icons.quiz, size: 40, color: Colors.orange[800]),
-                  title: const Text(
-                    'Quiz Culture Générale',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const QuizGame()),
-                    );
-                  },
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -71,18 +88,18 @@ class GamesScreen extends StatelessWidget {
   }
 }
 
-// Jeu de mémoire
+//
+// 🔹 Jeu de Mémoire
+//
 class MemoryGame extends StatefulWidget {
   const MemoryGame({super.key});
 
   @override
-  _MemoryGameState createState() => _MemoryGameState();
+  State<MemoryGame> createState() => _MemoryGameState();
 }
 
 class _MemoryGameState extends State<MemoryGame> {
-  List<String> cards = [
-    'A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F'
-  ];
+  List<String> cards = ['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D'];
   List<bool> cardFlips = [];
   int? firstCardIndex;
   int? secondCardIndex;
@@ -100,22 +117,17 @@ class _MemoryGameState extends State<MemoryGame> {
 
     setState(() {
       cardFlips[index] = true;
-      
       if (firstCardIndex == null) {
         firstCardIndex = index;
       } else {
         secondCardIndex = index;
-        
         if (cards[firstCardIndex!] == cards[secondCardIndex!]) {
           pairsFound++;
           firstCardIndex = null;
           secondCardIndex = null;
-          
-          if (pairsFound == cards.length ~/ 2) {
-            _showWinDialog();
-          }
+          if (pairsFound == cards.length ~/ 2) _showWinDialog();
         } else {
-          Future.delayed(const Duration(milliseconds: 1000), () {
+          Future.delayed(const Duration(milliseconds: 700), () {
             setState(() {
               cardFlips[firstCardIndex!] = false;
               cardFlips[secondCardIndex!] = false;
@@ -131,32 +143,27 @@ class _MemoryGameState extends State<MemoryGame> {
   void _showWinDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Félicitations !'),
-          content: const Text('Vous avez trouvé toutes les paires !'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  cards.shuffle();
-                  cardFlips = List<bool>.filled(cards.length, false);
-                  pairsFound = 0;
-                });
-              },
-              child: const Text('Rejouer'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Retour'),
-            ),
-          ],
-        );
-      },
+      builder: (context) => AlertDialog(
+        title: const Text('Félicitations 🎉'),
+        content: Lottie.asset('assets/images/Trophy.json', repeat: false, height: 120),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                cards.shuffle();
+                cardFlips = List<bool>.filled(cards.length, false);
+                pairsFound = 0;
+              });
+            },
+            child: const Text('Rejouer'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Retour'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -164,56 +171,55 @@ class _MemoryGameState extends State<MemoryGame> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Jeu de Mémoire'),
-        backgroundColor: Colors.orange[700],
+        title: const Text("Jeu de Mémoire"),
+        backgroundColor: Colors.deepOrange,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/images/background.jpg"), // Même image ou différente
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 0.9,
-          ),
-          itemCount: cards.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () => flipCard(index),
-              child: Card(
-                color: cardFlips[index] ? Colors.orange[100] : Colors.orange[700],
-                elevation: 4,
-                child: Center(
-                  child: Text(
-                    cardFlips[index] ? cards[index] : '?',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: cardFlips[index] ? Colors.black : Colors.white,
+      body: Column(
+        children: [
+          const SizedBox(height: 20),
+          Lottie.asset('assets/images/Cognition.json', height: 150),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: cards.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => flipCard(index),
+                  child: Card(
+                    color: cardFlips[index] ? Colors.orange[100] : Colors.deepOrange,
+                    child: Center(
+                      child: Text(
+                        cardFlips[index] ? cards[index] : "?",
+                        style: TextStyle(
+                          fontSize: 30,
+                          color: cardFlips[index] ? Colors.black : Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-
 // Jeu de quiz
+//
+// 🔹 Quiz Culture Générale (corrigé et bien centré)
+//
 class QuizGame extends StatefulWidget {
   const QuizGame({super.key});
 
   @override
-  _QuizGameState createState() => _QuizGameState();
+  State<QuizGame> createState() => _QuizGameState();
 }
 
 class _QuizGameState extends State<QuizGame> {
@@ -244,12 +250,11 @@ class _QuizGameState extends State<QuizGame> {
     },
   ];
 
-  void answerQuestion(int answerIndex) {
+  void answerQuestion(int index) {
     if (answered) return;
-
     setState(() {
       answered = true;
-      if (answerIndex == questions[currentQuestionIndex]['correctIndex']) {
+      if (index == questions[currentQuestionIndex]['correctIndex']) {
         score++;
       }
     });
@@ -269,104 +274,129 @@ class _QuizGameState extends State<QuizGame> {
   void _showResultDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Résultats du Quiz'),
-          content: Text('Votre score: $score/${questions.length}'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                setState(() {
-                  currentQuestionIndex = 0;
-                  score = 0;
-                  answered = false;
-                });
-              },
-              child: const Text('Recommencer'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Retour'),
-            ),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text('Résultat 🎯', textAlign: TextAlign.center),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Lottie.asset('assets/images/Quiz button.json', height: 100),
+            const SizedBox(height: 10),
+            Text('Votre score : $score / ${questions.length}',
+                style: const TextStyle(fontSize: 18)),
           ],
-        );
-      },
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                currentQuestionIndex = 0;
+                score = 0;
+                answered = false;
+              });
+            },
+            child: const Text('Rejouer'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Retour'),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final question = questions[currentQuestionIndex];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quiz Culture Générale'),
-        backgroundColor: Colors.orange[700],
+        title: const Text("Quiz Culture Générale"),
+        backgroundColor: Colors.deepOrange,
       ),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/background.jpg"), // Même image ou différente
+            image: AssetImage("assets/images/jeu.jpg"),
             fit: BoxFit.cover,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Question ${currentQuestionIndex + 1}/${questions.length}',
-                style: const TextStyle(fontSize: 18, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              LinearProgressIndicator(
-                value: (currentQuestionIndex + 1) / questions.length,
-                backgroundColor: Colors.grey[300],
-                color: Colors.orange,
-              ),
-              const SizedBox(height: 30),
-              Text(
-                questions[currentQuestionIndex]['question'],
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 30),
-              ...List.generate(4, (index) {
-                bool isCorrect = index == questions[currentQuestionIndex]['correctIndex'];
-                bool isSelected = answered && index == questions[currentQuestionIndex]['correctIndex'];
-                
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: answered
-                          ? isCorrect
-                              ? Colors.green
-                              : Colors.red
-                          : Colors.orange[700],
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    onPressed: () => answerQuestion(index),
-                    child: Text(questions[currentQuestionIndex]['answers'][index]),
-                  ),
-                );
-              }),
-              const SizedBox(height: 20),
-              if (answered && currentQuestionIndex < questions.length - 1)
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      currentQuestionIndex++;
-                      answered = false;
-                    });
-                  },
-                  child: const Text('Question suivante'),
+        child: Container(
+          color: Colors.white.withOpacity(0.9),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Lottie.asset('assets/images/Quiz button.json', height: 120),
+                const SizedBox(height: 20),
+                Text(
+                  "Question ${currentQuestionIndex + 1}/${questions.length}",
+                  style: const TextStyle(fontSize: 18, color: Colors.grey),
                 ),
-            ],
+                const SizedBox(height: 10),
+                LinearProgressIndicator(
+                  value: (currentQuestionIndex + 1) / questions.length,
+                  color: Colors.deepOrange,
+                  backgroundColor: Colors.orange.shade100,
+                ),
+                const SizedBox(height: 30),
+                Text(
+                  question['question'],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // 🟠 Boutons uniformes et centrés
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: question['answers'].length,
+                    itemBuilder: (context, i) {
+                      bool isCorrect = i == question['correctIndex'];
+                      Color buttonColor = Colors.deepOrange;
+
+                      if (answered) {
+                        if (isCorrect) {
+                          buttonColor = Colors.green;
+                        } else {
+                          buttonColor = Colors.red.shade400;
+                        }
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            onPressed: () => answerQuestion(i),
+                            child: Text(question['answers'][i]),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

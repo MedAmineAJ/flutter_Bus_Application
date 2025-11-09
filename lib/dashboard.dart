@@ -1,159 +1,86 @@
 import 'package:flutter/material.dart';
+import 'games_screen.dart';
+import 'map_screen.dart';
+import 'library_screen.dart';
+import 'meteo_screen.dart';
+import 'feedback_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  // Par défaut, afficher "Jeux"
+  int _selectedIndex = 2;
 
   Future<void> _signOut(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacementNamed(context, '/');
   }
 
+  final List<Widget> _screens = const [
+    MapScreen(),
+    LibraryScreen(),
+    GamesScreen(),
+    MeteoScreen(),
+    FeedbackScreen(),
+  ];
+
+  final List<String> _titles = [
+    'Carte',
+    'Bibliothèque',
+    'Jeux',
+    'Météo',
+    'Feedback',
+  ];
+
+  final List<IconData> _icons = [
+    Icons.map_rounded,
+    Icons.library_books_rounded,
+    Icons.gamepad_rounded,
+    Icons.wb_sunny_rounded,
+    Icons.feedback_rounded,
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tableau de bord'),
-        backgroundColor: Colors.orange[700],
+        title: Text('Déconnexion'),
+        backgroundColor: Colors.deepOrange,
+        automaticallyImplyLeading: false, // Supprime le bouton retour
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
             onPressed: () => _signOut(context),
+            icon: const Icon(Icons.logout_rounded),
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/images/bus1.jpg"), // Chemin de votre image
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              // 🔸 Grand titre d'accueil avec icône de bus
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: const [
-                    Icon(
-                      Icons.directions_bus_filled,
-                      size: 60,
-                      color: Colors.deepOrange,
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Bienvenue dans le tableau de bord Kidway',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepOrange,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // 🔸 Carte pour Voir la carte
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: ListTile(
-                  leading: Icon(Icons.map, size: 40, color: Colors.orange[800]),
-                  title: const Text(
-                    'Voir la carte',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  trailing: Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/map');
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 🔸 Carte pour Voir la bibliothèque
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: ListTile(
-                  leading: Icon(Icons.library_books, size: 40, color: Colors.orange[800]),
-                  title: const Text(
-                    'Voir la bibliothèque',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  trailing: Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/library');
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 🔸 Carte pour Voir les Jeux
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: ListTile(
-                  leading: Icon(Icons.gamepad, size: 40, color: Colors.orange[800]),
-                  title: const Text(
-                    'Voir les jeux',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  trailing: Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/games');
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 🔸 Carte pour Voir la Météo
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: ListTile(
-                  leading: Icon(Icons.wb_sunny, size: 40, color: Colors.orange[800]),
-                  title: const Text(
-                    'Voir la météo',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  trailing: Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/meteo');  // Nouvelle route vers la météo
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 🔸 Carte pour Voir le Feedback
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                child: ListTile(
-                  leading: Icon(Icons.feedback, size: 40, color: Colors.orange[800]),
-                  title: const Text(
-                    'Feedback et Suggestions',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  trailing: Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/feedback');  // Nouvelle route vers le feedback
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+      body: _screens[_selectedIndex], // Affiche directement l'écran correspondant
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.deepOrange,
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        items: _icons.asMap().entries.map((entry) {
+          int idx = entry.key;
+          IconData icon = entry.value;
+          return BottomNavigationBarItem(
+            icon: Icon(icon),
+            label: _titles[idx],
+          );
+        }).toList(),
       ),
     );
   }
